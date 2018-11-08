@@ -1,0 +1,38 @@
+- name: Install packages
+  yum: 
+    name: {{item}} 
+    state: latest
+  become: yes
+  with_items:
+    - python-virtualenv
+    - postgresql
+
+- name: Clone upgrade demo
+  git:
+    repo: 'https://'
+    dest: /srv/checkout
+
+- name: Create demo directory
+  file:
+    path: /opt/demo
+    state: directory
+
+- name: Install requirements into virtualenv
+  pip: 
+    requirements: /opt/demo/requirements.txt
+    virtualenv: /opt/demo/upgrade_venv
+    virtualenv_python: python2
+
+- name: Make migration
+  django_manage:
+    command: "makemigrations"
+    app_path: "{{ django_dir }}"
+    virtualenv: "{{ virtualenv_dir }}"
+
+- name: Create admin user
+  django_manage:
+    command: "createsuperuser --noinput --username=admin --email=admin@example.com"
+    app_path: "{{ django_dir }}"
+    virtualenv: "{{ virtualenv_dir }}"
+
+- name:
